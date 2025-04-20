@@ -23,13 +23,13 @@ namespace WpfApp.Views
     /// </summary>
     public partial class View2 : UserControl
     {
-        public View2Model ViewModel { get; } = new View2Model();
+        private View2Model ViewModel => (View2Model)DataContext;
         private bool isDragging = false;
 
         public View2()
         {
             InitializeComponent();
-            DataContext = ViewModel;
+            //DataContext = ViewModel;
 
         }
         private void MainGrid_MouseMove(object sender, MouseEventArgs e)

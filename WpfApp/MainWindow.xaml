@@ -15,9 +15,6 @@
             <local:EnumEqualsConverter x:Key="EnumEqualsConverter"/>
         </ResourceDictionary>
     </Window.Resources>
-    <d:Window.DataContext>
-        <local:MainViewModel/>
-    </d:Window.DataContext>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -50,6 +47,5 @@
             </StackPanel>
         </Grid>
         <ContentControl Grid.Column="1" Content="{Binding CurrentView}" />
-
     </Grid>
 </Window>

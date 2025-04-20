@@ -21,13 +21,11 @@ namespace WpfApp
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainViewModel ViewModel { get; } = new MainViewModel();
-
-        public MainWindow()
+        public MainWindow(MainViewModel viewModel)
         {
             InitializeComponent();
-            DataContext = ViewModel;
+            DataContext = viewModel;
         }
-       
+
     }
 }
