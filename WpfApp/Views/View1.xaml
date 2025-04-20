@@ -1,0 +1,36 @@
+﻿<UserControl x:Class="WpfApp.Views.View1"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:WpfApp.ViewModels"
+             mc:Ignorable="d">
+    <Grid>
+        <StackPanel Margin="10">
+            <TextBox Text="{Binding Age, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
+            <TextBox Text="{Binding Score, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
+            <!-- 共通エラーメッセージ表示用 -->
+            <TextBlock Foreground="Red" Text="{Binding ErrorMessage}" TextWrapping="Wrap"  />
+            <Button Content="送信" Command="{Binding SubmitCommand}" Margin="0,10,0,0"/>
+
+            <!-- 親スイッチ -->
+            <CheckBox Content="詳細設定を有効にする"
+              IsChecked="{Binding EnableAdvanced}" />
+
+            <!-- 子スイッチ（親がONのときだけいじれる） -->
+            <CheckBox Content="オプション1"
+              IsChecked="{Binding AdvancedOption1}"
+              IsEnabled="{Binding IsAdvancedOptionsEnabled}" />
+
+            <CheckBox Content="オプション2"
+              IsChecked="{Binding AdvancedOption2}"
+              IsEnabled="{Binding IsAdvancedOptionsEnabled}" />
+
+
+            <!-- 成功メッセージ -->
+
+            <TextBlock Foreground="Green"
+               Text="{Binding Message}" />
+        </StackPanel>
+    </Grid>
+</UserControl>
