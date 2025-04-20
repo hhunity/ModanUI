@@ -8,27 +8,48 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Window.Resources>
-        <local:EnumEqualsConverter x:Key="EnumEqualsConverter"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/ToggleButtonStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <local:EnumEqualsConverter x:Key="EnumEqualsConverter"/>
+        </ResourceDictionary>
     </Window.Resources>
-    <Window.DataContext>
+    <d:Window.DataContext>
         <local:MainViewModel/>
-    </Window.DataContext>
+    </d:Window.DataContext>
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal" Margin="10"  Grid.Row="0">
-            <ToggleButton Content="タブ1"
-                  IsChecked="{Binding SelectedTab, Converter={StaticResource EnumEqualsConverter}, ConverterParameter=View1}"
-                  Command="{Binding ShowView1Command}"
-                  Margin="0,0,10,0" />
-            <ToggleButton Content="タブ2"
-                  IsChecked="{Binding SelectedTab, Converter={StaticResource EnumEqualsConverter}, ConverterParameter=View2}"
-                  Command="{Binding ShowView2Command}" />
-            <!-- UserControl表示領域 -->
-        </StackPanel>
-        <ContentControl Grid.Row="1" Content="{Binding CurrentView}" />
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Vertical" Margin="0"  Grid.Row="0">
+                <RadioButton Content="View1"
+                 Style="{StaticResource FlatToggleRadioStyle}"
+                 GroupName="Tabs"
+                 IsChecked="{Binding SelectedTab, Converter={StaticResource EnumEqualsConverter}, ConverterParameter=View1}"
+                 Command="{Binding ShowView1Command}" />
+
+                <RadioButton Content="View2"
+                 Style="{StaticResource FlatToggleRadioStyle}"
+                 GroupName="Tabs"
+                 IsChecked="{Binding SelectedTab, Converter={StaticResource EnumEqualsConverter}, ConverterParameter=View2}"
+                 Command="{Binding ShowView2Command}" />
+            </StackPanel>
+            <StackPanel Orientation="Vertical" Margin="10"  Grid.Row="1">
+                <RadioButton Content="⚙"
+                 Style="{StaticResource FlatToggleRadioStyle}"
+                 GroupName="Tabs"
+                 IsChecked="{Binding SelectedTab, Converter={StaticResource EnumEqualsConverter}, ConverterParameter=ViewSetting}"
+                 Command="{Binding ShowSettingViewCommand}" />
+            </StackPanel>
+        </Grid>
+        <ContentControl Grid.Column="1" Content="{Binding CurrentView}" />
 
     </Grid>
 </Window>

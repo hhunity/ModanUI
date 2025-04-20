@@ -23,7 +23,11 @@ namespace WpfApp.ViewModels
 
     public partial class MainViewModel : ObservableValidator
     {
-        public enum TabKey { View1, View2 }
+        //public View2Model SharedView2Model { get; } = new View2Model();
+
+
+
+        public enum TabKey { View1, View2 , ViewSetting}
 
         // 今表示中のタブを表す列挙型
         [ObservableProperty]
@@ -42,8 +46,15 @@ namespace WpfApp.ViewModels
         [RelayCommand]
         private void ShowView2()
         {
-            CurrentView = new Views.View2();
+            CurrentView = new Views.View2();//{ DataContext = SharedView2Model };
             SelectedTab = TabKey.View2;
+        }
+
+        [RelayCommand]
+        private void ShowSettingView()
+        {
+            CurrentView = new Views.ViewSetting();
+            SelectedTab = TabKey.ViewSetting;
         }
     }
 
