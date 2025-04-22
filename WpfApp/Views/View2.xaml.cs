@@ -42,6 +42,7 @@ namespace WpfApp.Views
                 var pos2 = e.GetPosition(MainGrid);
                 ViewModel.DragX = pos2.X;
                 ViewModel.DragY = pos2.Y;
+                ((App)Application.Current).AppSettings["point"] = pos2.X;
             }
         }
 

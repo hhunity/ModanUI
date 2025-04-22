@@ -12,8 +12,14 @@ namespace WpfApp
     /// </summary>
     public partial class App : Application
     {
-        public static IServiceProvider ServiceProvider { get; private set; }
+        internal static IServiceProvider ServiceProvider { get; private set; }
+        public ApplicationSettingsBase AppSettings => Settings.Default;
 
+        protected override void OnExit(ExitEventArgs e)
+        {
+            AppSettings.Save();  // ここでまとめて保存もできる！
+            base.OnExit(e);
+        }
         protected override void OnStartup(StartupEventArgs e)
         {
             var services = new ServiceCollection();
