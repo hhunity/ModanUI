@@ -21,12 +21,11 @@ namespace WpfApp.Views
     /// </summary>
     public partial class View1 : UserControl
     {
-        public View1Model ViewModel => (View1Model)DataContext;
         
-        public View1()
+        public View1(View1Model ViewModel)
         {
             InitializeComponent();
-            //DataContext = ViewModel;
+            DataContext = ViewModel;
         }
     }
 }

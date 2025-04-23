@@ -15,36 +15,40 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WpfApp.ViewModels;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace WpfApp.Views
 {
+    public class MousePositionMessage
+    {
+        public Point Position { get; }
+        public bool IsDragging { get; set; } = false; // ドラッグ中かどうか
+
+        public MousePositionMessage(Point position,bool bdrag)
+        {
+            Position = position;
+            IsDragging = bdrag;
+        }
+    }
+
     /// <summary>
     /// View2.xaml の相互作用ロジック
     /// </summary>
     public partial class View2 : UserControl
     {
-        private View2Model ViewModel => (View2Model)DataContext;
+        //private View2Model ViewModel => (View2Model)DataContext;
         private bool isDragging = false;
 
-        public View2()
+        public View2(View2Model ViewModel)
         {
             InitializeComponent();
-            //DataContext = ViewModel;
+            DataContext = ViewModel;
 
         }
         private void MainGrid_MouseMove(object sender, MouseEventArgs e)
         {
             Point pos = e.GetPosition(MainGrid);
-            ViewModel.MouseX = pos.X;
-            ViewModel.MouseY = pos.Y;
-            if (isDragging)
-            {
-                var pos2 = e.GetPosition(MainGrid);
-                ViewModel.DragX = pos2.X;
-                ViewModel.DragY = pos2.Y;
-                Settings.Default.point = pos2.X;
-                ((App)Application.Current).AppSettings.point = pos2.X;
-            }
+            WeakReferenceMessenger.Default.Send(new MousePositionMessage(pos,isDragging));
         }
 
         private void MainGrid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

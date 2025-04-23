@@ -25,21 +25,14 @@ namespace WpfApp.ViewModels
     {
         //public View2Model SharedView2Model { get; } = new View2Model();
 
-        private readonly View2Model _view2Model;
         private readonly View2 _view2;
-        private readonly View1Model _view1Model;
         private readonly View1 _view1;
 
-        public MainViewModel(View1Model view1Model, View1 view1, View2Model view2Model, View2 view2)
+        public MainViewModel(View1 view1, View2 view2)
         {
             // 保持しておきたい場合だけフィールドに保存
             _view1 = view1;
             _view2 = view2;
-            _view1Model = view1Model;
-            _view2Model = view2Model;
-            // View に対応する ViewModel をセット
-            view1.DataContext = view1Model;
-            view2.DataContext = view2Model;
 
             // 最初の画面を表示
             CurrentView = view1;
@@ -64,11 +57,7 @@ namespace WpfApp.ViewModels
         [RelayCommand]
         private void ShowView2()
         {
-            var view2 = new View2
-            {
-                DataContext = _view2Model
-            };
-            CurrentView = view2;
+            CurrentView = _view2;
         }
 
         [RelayCommand]
