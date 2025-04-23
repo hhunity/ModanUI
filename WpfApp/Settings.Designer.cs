@@ -23,12 +23,15 @@ namespace WpfApp {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public double point {
             get {
                 return ((double)(this["point"]));
+            }
+            set {
+                this["point"] = value;
             }
         }
     }

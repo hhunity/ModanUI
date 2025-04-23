@@ -13,7 +13,7 @@ namespace WpfApp
     public partial class App : Application
     {
         internal static IServiceProvider ServiceProvider { get; private set; }
-        public ApplicationSettingsBase AppSettings => Settings.Default;
+        internal Settings AppSettings => Settings.Default;
 
         protected override void OnExit(ExitEventArgs e)
         {
