@@ -1,0 +1,42 @@
+using ImageMagick;
+
+int width = 100;
+int height = 100;
+
+// 1. バイト配列（例：全部0～255のグラデーション）
+byte[] pixels = new byte[width * height];
+for (int i = 0; i < pixels.Length; i++)
+    pixels[i] = (byte)(i % 256);
+
+// 2. MagickImage作成（グレースケール 8bit）
+using var image = new MagickImage(pixels, new PixelReadSettings(width, height, StorageType.Char, PixelMapping.Gray));
+
+// 3. TIFF形式で保存
+image.Format = MagickFormat.Tiff;
+image.Write("output_gray8.tif");
+
+int width = 128;
+int height = 128;
+int bytesPerRow = (width + 7) / 8;
+byte[] buffer = new byte[bytesPerRow * height];
+
+// 1. ビット配列を構成（例：縞模様）
+for (int y = 0; y < height; y++)
+{
+    for (int x = 0; x < width; x++)
+    {
+        if ((x + y) % 2 == 0)
+        {
+            int bitIndex = y * width + x;
+            int byteIndex = bitIndex / 8;
+            int bitOffset = 7 - (bitIndex % 8); // MSB first
+            buffer[byteIndex] |= (byte)(1 << bitOffset);
+        }
+    }
+}
+
+// 2. MagickImage作成（1bit画像として読み込み）
+using var image = new MagickImage(buffer, new PixelReadSettings(width, height, StorageType.Bit, PixelMapping.Gray));
+image.Format = MagickFormat.Tiff;
+image.Depth = 1; // 1bit
+image.Write("output_bw1bit.tif");
