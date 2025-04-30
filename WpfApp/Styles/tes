@@ -1,3 +1,31 @@
+public static IEnumerable<object[]> GetDataFromCsv()
+{
+    var lines = File.ReadAllLines("TestData.csv");
+    foreach (var line in lines)
+    {
+        var parts = line.Split(',');
+        yield return new object[]
+        {
+            int.Parse(parts[0]),
+            int.Parse(parts[1]),
+            int.Parse(parts[2])
+        };
+    }
+}
+
+[TestMethod]
+[DynamicData(nameof(GetDataFromCsv), DynamicDataSourceType.Method)]
+public void AddTest(int a, int b, int expected)
+{
+    Assert.AreEqual(expected, Add(a, b));
+}
+
+
+
+
+
+
+
 using ImageMagick;
 
 int width = 100;
