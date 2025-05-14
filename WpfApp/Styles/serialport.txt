@@ -8,7 +8,8 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly SerialPortWorker _serialWorker;
     private readonly SemaphoreSlim _sendLock = new(1, 1);
-
+[ObservableProperty]
+private int progress;
     [ObservableProperty]
     private string serialData;
 
