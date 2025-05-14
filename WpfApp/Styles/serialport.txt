@@ -1,16 +1,22 @@
 ####view model
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Threading;
+using System.Threading.Tasks;
 
 public partial class MainViewModel : ObservableObject
 {
     private readonly SerialPortWorker _serialWorker;
+    private readonly SemaphoreSlim _sendLock = new(1, 1);
 
     [ObservableProperty]
     private string serialData;
 
     [ObservableProperty]
     private string commandText;
+
+    [ObservableProperty]
+    private bool isSending;
 
     public MainViewModel()
     {
@@ -20,14 +26,28 @@ public partial class MainViewModel : ObservableObject
 
     private void OnReceived(string data)
     {
-        // UIスレッドで更新（DispatcherはSerialPortWorker内で呼んでる）
         SerialData = data;
     }
 
     [RelayCommand]
     public async Task SendCommandAsync()
     {
-        await _serialWorker.WriteAsync(CommandText);
+        if (IsSending) return;
+
+        IsSending = true;
+        await _sendLock.WaitAsync();
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(CommandText))
+            {
+                SerialData = await _serialWorker.WriteAndReadAsync(CommandText);
+            }
+        }
+        finally
+        {
+            _sendLock.Release();
+            IsSending = false;
+        }
     }
 
     public void Dispose()
