@@ -38,15 +38,15 @@ public partial class MainViewModel : ObservableObject
 
 ##model
 using System;
-using System.IO.Ports;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Diagnostics;
+using System.IO.Ports;
+using System.Windows;
 
 public class SerialPortWorker
 {
     private readonly SerialPort _port;
     private readonly Action<string> _onDataReceived;
+    private volatile bool _isClosing = false;
 
     public SerialPortWorker(string portName, Action<string> onDataReceived)
     {
@@ -64,56 +64,76 @@ public class SerialPortWorker
     public void Start()
     {
         if (!_port.IsOpen)
-            _port.Open();
+        {
+            try
+            {
+                _port.Open();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Serial port open error: {ex.Message}");
+            }
+        }
     }
 
     public void Close()
     {
-        if (_port.IsOpen)
+        _isClosing = true;
+
+        try
         {
-            _port.DataReceived -= Port_DataReceived;
-            _port.Close();
+            if (_port.IsOpen)
+            {
+                _port.DataReceived -= Port_DataReceived;
+                _port.Close();
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Serial port close error: {ex.Message}");
         }
     }
 
-    public Task WriteAsync(string command)
+    public async Task WriteAsync(string command)
     {
-        return Task.Run(() =>
+        await Task.Run(() =>
         {
             try
             {
-                if (!string.IsNullOrWhiteSpace(command))
+                if (!_isClosing && _port.IsOpen && !string.IsNullOrWhiteSpace(command))
                     _port.WriteLine(command);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Write error: {ex.Message}");
+                Debug.WriteLine($"Serial port write error: {ex.Message}");
             }
         });
     }
 
     private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
     {
+        if (_isClosing || !_port.IsOpen)
+            return;
+
         try
         {
-            string data = _port.ReadLine(); // バッファに入ってる分を読む
+            string data = _port.ReadLine();
 
-            Application.Current.Dispatcher.Invoke(() =>
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher != null && !dispatcher.HasShutdownStarted && !dispatcher.HasShutdownFinished)
             {
-                _onDataReceived?.Invoke(data);
-            });
-        }
-        catch (TimeoutException)
-        {
-            // 読み取り中のタイムアウトは無視
+                dispatcher.Invoke(() =>
+                {
+                    _onDataReceived?.Invoke(data);
+                });
+            }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Receive error: {ex.Message}");
+            Debug.WriteLine($"Serial port read error: {ex.Message}");
         }
     }
 }
-
 ##xaml
 <Window x:Class="WpfApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
