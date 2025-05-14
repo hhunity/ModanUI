@@ -28,7 +28,31 @@ public partial class MainViewModel : ObservableObject
     {
         SerialData = data;
     }
+[RelayCommand]
+public async Task SendCommandAsync()
+{
+    if (IsSending) return;
 
+    IsSending = true;
+    Progress = 0;
+
+    await _sendLock.WaitAsync();
+    try
+    {
+        var reporter = new Progress<int>(p => Progress = p);
+
+        if (!string.IsNullOrWhiteSpace(CommandText))
+        {
+            SerialData = await _serialWorker.WriteAndReadAsync(CommandText, reporter);
+        }
+    }
+    finally
+    {
+        Progress = 0;
+        _sendLock.Release();
+        IsSending = false;
+    }
+}
     [RelayCommand]
     public async Task SendCommandAsync()
     {
@@ -113,7 +137,33 @@ public class SerialPortWorker
             Debug.WriteLine($"Serial port close error: {ex.Message}");
         }
     }
+public async Task<string> WriteAndReadAsync(string command, IProgress<int>? progress = null)
+{
+    return await Task.Run(() =>
+    {
+        try
+        {
+            if (_isClosing || !_port.IsOpen)
+                return "[Port Closed]";
 
+            progress?.Report(10); // 書き込み開始
+
+            _port.WriteLine(command);
+            progress?.Report(50); // 書き込み完了
+
+            string response = _port.ReadLine();
+            progress?.Report(100); // 応答完了
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Serial error: {ex.Message}");
+            progress?.Report(0);
+            return "[Error]";
+        }
+    });
+}
     public async Task WriteAsync(string command)
     {
         await Task.Run(() =>
@@ -167,7 +217,11 @@ public class SerialPortWorker
         <TextBox Text="{Binding CommandText, UpdateSourceTrigger=PropertyChanged}" />
         <Button Content="Send" Command="{Binding SendCommandCommand}" Margin="0,10,0,0"/>
         <TextBlock Text="{Binding SerialData}" Margin="0,10,0,0" FontSize="16"/>
-    </StackPanel>
+    <ProgressBar Height="10" Margin="0,10,0,0"
+             Minimum="0" Maximum="100"
+             Value="{Binding Progress}"
+             Visibility="{Binding IsSending, Converter={StaticResource BoolToVisibilityConverter}}"/>
+</StackPanel>
 </Window>
 
 
