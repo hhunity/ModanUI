@@ -180,7 +180,41 @@ public async Task<string> WriteAndReadAsync(string command, IProgress<int>? prog
             }
         });
     }
+private bool _isReceiving = false;
+private readonly object _receiveLock = new();
 
+private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
+{
+    lock (_receiveLock)
+    {
+        if (_isClosing || _isReceiving || !_port.IsOpen)
+            return;
+
+        _isReceiving = true;
+    }
+
+    try
+    {
+        string data = _port.ReadLine();
+
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.HasShutdownStarted)
+        {
+            dispatcher.Invoke(() => _onDataReceived?.Invoke(data));
+        }
+    }
+    catch (Exception ex)
+    {
+        Debug.WriteLine($"Receive error: {ex.Message}");
+    }
+    finally
+    {
+        lock (_receiveLock)
+        {
+            _isReceiving = false;
+        }
+    }
+}
     private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
     {
         if (_isClosing || !_port.IsOpen)
