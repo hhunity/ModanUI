@@ -1,3 +1,134 @@
+using System;
+using System.Diagnostics;
+using System.IO.Ports;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
+using System.Windows;
+
+public class SerialPortWorker
+{
+    private readonly SerialPort _port;
+    private readonly Action<string> _onDataReceived;
+    private readonly Channel<string> _receiveChannel;
+    private readonly CancellationTokenSource _cts;
+
+    public SerialPortWorker(string portName, Action<string> onDataReceived)
+    {
+        _onDataReceived = onDataReceived;
+        _port = new SerialPort(portName, 9600)
+        {
+            NewLine = "\n",
+            ReadTimeout = 1000,
+            WriteTimeout = 1000
+        };
+
+        _receiveChannel = Channel.CreateUnbounded<string>();
+        _cts = new CancellationTokenSource();
+
+        _port.DataReceived += Port_DataReceived;
+    }
+
+    public void Start()
+    {
+        try
+        {
+            if (!_port.IsOpen)
+                _port.Open();
+
+            Task.Run(() => ReceiveLoopAsync(_cts.Token));
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Serial port start error: {ex.Message}");
+        }
+    }
+
+    public void Close()
+    {
+        try
+        {
+            _cts.Cancel();
+
+            if (_port.IsOpen)
+            {
+                _port.DataReceived -= Port_DataReceived;
+                _port.Close();
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Serial port close error: {ex.Message}");
+        }
+    }
+
+    public async Task<string> WriteAndReadAsync(string command)
+    {
+        return await Task.Run(() =>
+        {
+            try
+            {
+                if (!_port.IsOpen || string.IsNullOrWhiteSpace(command))
+                    return "[Invalid Command or Port Closed]";
+
+                _port.WriteLine(command);
+                return _port.ReadLine();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Write/Read error: {ex.Message}");
+                return "[Error]";
+            }
+        });
+    }
+
+    private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
+    {
+        try
+        {
+            while (_port.BytesToRead > 0)
+            {
+                string data = _port.ReadLine();
+                _receiveChannel.Writer.TryWrite(data);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Receive error: {ex.Message}");
+        }
+    }
+
+    private async Task ReceiveLoopAsync(CancellationToken token)
+    {
+        try
+        {
+            while (await _receiveChannel.Reader.WaitToReadAsync(token))
+            {
+                while (_receiveChannel.Reader.TryRead(out var data))
+                {
+                    var dispatcher = Application.Current?.Dispatcher;
+                    if (dispatcher != null && !dispatcher.HasShutdownStarted)
+                    {
+                        dispatcher.Invoke(() => _onDataReceived?.Invoke(data));
+                    }
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // 正常終了
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Receive loop error: {ex.Message}");
+        }
+    }
+}
+
+
+
+
+
 ####view model
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
